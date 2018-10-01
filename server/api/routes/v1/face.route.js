@@ -4,13 +4,7 @@ const { authorize } = require('../../middlewares/auth');
 
 const router = express.Router();
 
-router.route('/')
-  .get(authorize(), controller.list);
-
-router.route('/:faceId')
-  .get(authorize(), controller.show);
-
-router.route('/:faceId/analyze')
-  .get(authorize(), controller.analyze);
+router.route('/load')
+  .get(controller.load);
 
 module.exports = router;

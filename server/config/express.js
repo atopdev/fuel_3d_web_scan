@@ -40,6 +40,8 @@ if (config.env === 'production') {
   });
 }
 
+app.use(config.tempDir.uri, express.static(config.tempDir.path));
+
 app.use(error.converter);
 app.use(error.notFound);
 app.use(error.handler);

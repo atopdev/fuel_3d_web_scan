@@ -1,3 +1,5 @@
+const path = require('path');
+
 require('dotenv').config();
 
 const config = {
@@ -14,6 +16,10 @@ const config = {
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
     region: process.env.S3_REGION,
     bucket: process.env.S3_BUCKET_NAME,
+  },
+  tempDir: {
+    path: path.join(__dirname, '../../public/temp'),
+    uri: '/temp',
   },
 };
 

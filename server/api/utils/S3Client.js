@@ -11,27 +11,6 @@ const S3Client = new S3({
   },
 });
 
-const userNames = ['Alex', 'Arun', 'Farhad', 'Phillip'];
-
-exports.faceObjectFiles = (folderName) => {
-  let name;
-  userNames.forEach((username) => {
-    if(folderName.toLowerCase().indexOf(username.toLowerCase()) > -1) {
-      name = username;
-    }
-  });
-  return {
-    path: `//s3-${config.s3.region}.amazonaws.com/${config.s3.bucket}/fuel3d_demo_data/${folderName}/Output_sd/`,
-    thumbnail: 'C_00001.jpg',
-    img: 'head3d.jpg',
-    obj: 'head3d.obj',
-    mtl: 'head3d.obj.mtl',
-    points: 'faceLandmarks.obj.yml',
-    id: folderName,
-    name,
-  };
-};
-
 exports.listDirectory = params => {
   return new Promise ((resolve, reject) => {
     S3Client.listObjectsV2(params, (err, data) => {
