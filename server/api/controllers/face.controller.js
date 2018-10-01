@@ -1,48 +1,58 @@
-const jsyaml = require('js-yaml');
+const fs = require('fs');
+const JSZip = require('jszip');
 const config = require('../../config');
 const { handler: errorHandler } = require('../middlewares/error');
-const { listDirectory, faceObjectFiles, getObject } = require('../utils/S3Client');
-const Analyze = require('../utils/Analyze');
+const { listDirectory, getObject } = require('../utils/S3Client');
 
-exports.list = async (req, res, next) => {
+exports.load = async (req, res, next) => {
   try {
-    const s3Params = {
+    const s3ListParams = {
       Bucket: config.s3.bucket,
-      MaxKeys: 20,
       Delimiter: '/',
-      Prefix: 'fuel3d_demo_data/'
     };
-    const data = await listDirectory(s3Params);
-    const result = data.CommonPrefixes.map(item => {
-      const folderName = item.Prefix.replace(data.Prefix, '').replace(/\/$/, '');
-      const { path, thumbnail, name, id } = faceObjectFiles(folderName);
-      return { id, name, url: path + thumbnail };
+    const data = await listDirectory(s3ListParams);
+    const listZipFiles = data.Contents.sort((a, b) => b.LastModified - a.LastModified);
+    const lastFile = req.app.get('last_file');
+    const currentFile = req.app.get('current_file');
+    let nextFile;
+    if (listZipFiles.length > 0) {
+      if (!lastFile || (lastFile.LastModified < listZipFiles[0].LastModified && lastFile.Key !== listZipFiles[0].Key)) {
+        nextFile = listZipFiles[0];
+        req.app.set('last_file', nextFile);
+        req.app.set('current_file', nextFile);
+      } else {
+        nextFile = listZipFiles.find(z => z.LastModified < currentFile.LastModified);
+        if (!nextFile && lastFile) {
+          nextFile = lastFile;
+        }
+        req.app.set('current_file', nextFile);
+      }
+    }
+    const dirName = nextFile.Key.split('.').slice(0, -1).join('.');
+    const dirPath = `${config.tempDir.path}/${dirName}`;
+    if (!fs.existsSync(dirPath)) {
+      const s3GetParams = {
+        Bucket: config.s3.bucket,
+        Key: nextFile.Key,
+      };
+      const faceZipFile = await getObject(s3GetParams);
+      fs.mkdirSync(dirPath);
+      const jszip = new JSZip();
+      const zipContent = await jszip.loadAsync(faceZipFile.Body);
+      Object.keys(zipContent.files).forEach(async (filename) => {
+        const fileContent = await jszip.file(filename).async('nodebuffer');
+        const destFile = `${dirPath}/${filename}`;
+        fs.writeFileSync(destFile, fileContent);
+      });
+    }
+    return res.json({
+      path: `${config.host}${config.port === 80 ? '' : ':' + config.port}${config.tempDir.uri}/${dirName}`,
+      thumbnail: 'thumbnail.jpg',
+      img: 'head_mesh.jpg',
+      obj: 'head_mesh.obj',
+      mtl: 'head_mesh.mtl',
+      name: dirName,
     });
-    return res.json(result);
-  } catch (error) {
-    return next(error);
-  }
-};
-
-exports.show = (req, res, next) => {
-  const { faceId } = req.params;
-  return res.json(faceObjectFiles(faceId));
-};
-
-exports.analyze = async (req, res, next) => {
-  const { faceId } = req.params;
-  try {
-    const s3Params = {
-      Bucket: config.s3.bucket,
-      Key: `fuel3d_demo_data/${faceId}/Output_sd/faceLandmarks.obj.yml`,
-    };
-    const data = await getObject(s3Params);
-    let body = data.Body.toString().replace(/!!opencv-matrix/gi, '');
-    body = jsyaml.safeLoad(body);
-    const analyze = new Analyze(body['Point3f']['data']);
-    const match = analyze.similarityError();
-    const similarity = analyze.checkSimilarity();
-    return res.json({ match, similarity });
   } catch (error) {
     return next(error);
   }
