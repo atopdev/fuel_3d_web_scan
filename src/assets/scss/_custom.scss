@@ -2,10 +2,49 @@
 html, body {
   font-family: 'Montserrat', sans-serif;
   color: #343333;
+  background-color: #323232;
+}
+
+.app-body {
+  margin-top: 0 !important;
+}
+
+.renderer-container {
+  position: relative;
 }
 
 .object-renderer {
-  height: calc(100vh - 230px);
+  height: calc(100vh - 14px);
+  overflow: hidden;
+}
+
+.brand-gradient {
+  height: 14px;
+  width: 100%;
+  background: #0292b0;
+  background: -moz-linear-gradient(left, #0292b0 0%, #73b32e 100%);
+  background: -webkit-linear-gradient(left, #0292b0 0%,#73b32e 100%);
+  background: linear-gradient(to right, #0292b0 0%,#73b32e 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0292b0', endColorstr='#73b32e',GradientType=1 );
+}
+
+.logo {
+  position: absolute;
+  right: 30px;
+  width: 200px;
+  top: 60px;
+}
+
+.overlay {
+  border-bottom: calc(100vh) solid rgba(0, 0, 0, 0.17);
+  border-left: calc(38vw) solid transparent;
+  border-right: 0px solid transparent;
+  height: 0;
+  width: calc(42vw);
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: -1;
 }
 
 .btn-next {
@@ -24,69 +63,6 @@ html, body {
   font-weight: 600;
 }
 
-.right-pane {
-  border-left: 2px solid #343434;
-  margin-left: -2px;
-}
-
 .bg-grey {
   background-color: #f7f7f7;
-}
-
-.progress-bar {
-  &-wrapper {
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
-
-  &-block {
-    position: relative;
-    height: 30px;
-    flex-grow: 1;
-    margin-left: 5%;
-  }
-
-  &-bg {
-    background-color: #262626;
-    width: 100%;
-    height: 100%;
-    transform: skewX(-30deg);
-  }
-
-  &-active {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 0;
-    transform: skewX(-30deg);
-    background: linear-gradient(90deg, #0aafd2 0%, #0dc204 100%);
-  }
-
-  &-label {
-    font-size: 30px;
-    font-weight: 600;
-    min-width: 100px;
-    text-align: right;
-  }
-}
-
-.radial-wrapper {
-  padding: 32px;
-
-  .CircularProgressbar .CircularProgressbar-path {
-    stroke: url(#gradient_progress);
-  }
-}
-
-@media all and (max-width: 767px) {
-  .right-pane {
-    border-width: 0;
-    margin-left: 0;
-  }
-
-  .match-block {
-    flex-direction: column;
-  }
 }

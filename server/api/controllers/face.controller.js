@@ -46,7 +46,7 @@ exports.load = async (req, res, next) => {
       });
     }
     return res.json({
-      path: `${config.host}${config.port === 80 ? '' : ':' + config.port}${config.tempDir.uri}/${dirName}`,
+      path: `http://${config.host}${config.port === 80 ? '' : ':' + config.port}${config.tempDir.uri}/${dirName}/`,
       thumbnail: 'thumbnail.jpg',
       img: 'head_mesh.jpg',
       obj: 'head_mesh.obj',

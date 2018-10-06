@@ -4,7 +4,6 @@ import { reducer as formReducer } from 'redux-form';
 import { reducer as toastrReducer } from 'react-redux-toastr';
 import auth from '../routes/Login/modules';
 import app from '../wrappers/PrivateApp/modules';
-import dashboard from '../routes/Dashboard/modules';
 import face from '../routes/Face/modules';
 
 const rootReducer = combineReducers({
@@ -13,7 +12,6 @@ const rootReducer = combineReducers({
   toastr: toastrReducer,
   auth,
   app,
-  dashboard,
   face,
 });
 

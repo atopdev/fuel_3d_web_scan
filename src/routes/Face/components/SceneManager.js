@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import { MTLLoader, OBJLoader } from 'three-obj-mtl-loader';
-import GeneralControls from './GeneralControls';
 import GeneralLights from './GeneralLights';
 
-import texture0 from '../../../assets/images/materials/GoodwoodFOStexture/head3d.jpg';
+import goldenTexture from '../../../assets/images/materials/golden.jpg';
 
-export default (canvas, data) => {
+export default (canvas) => {
 
   const clock = new THREE.Clock();
   const origin = new THREE.Vector3(0, 0, 0);
@@ -17,7 +16,7 @@ export default (canvas, data) => {
 
   const scene = buildScene();
   const renderer = buildRender(screenDimensions);
-  renderer.setClearColor(scene.fog.color);
+  renderer.setClearColor(0x000000, 0);
   const camera = buildCamera(screenDimensions);
   scene.add(camera);
   const sceneSubjects = createSceneSubjects(scene, camera);
@@ -27,8 +26,8 @@ export default (canvas, data) => {
       texture: null,
       properties: {},
     },
-    goodwood: {
-      texture: texture0,
+    golden: {
+      texture: goldenTexture,
       properties: {
         shininess: 65,
         reflectivity: 0.47,
@@ -38,18 +37,17 @@ export default (canvas, data) => {
       },
     },
   };
-
-  loadModels(scene);
+  let passTime = 0;
+  let animation = false;
 
   function buildScene() {
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0xffffff, 0.0003);
 
     return scene;
   }
 
   function buildRender({ width, height }) {
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
     const DPR = window.devicePixelRatio ? window.devicePixelRatio : 1;
     renderer.setPixelRatio(DPR);
     renderer.setSize(width, height);
@@ -64,7 +62,7 @@ export default (canvas, data) => {
     const farPlane = 2000;
     const camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
-    camera.position.set(0, 100, 300);
+    camera.position.set(0, 0, 400);
     camera.lookAt(origin);
 
     return camera;
@@ -73,7 +71,6 @@ export default (canvas, data) => {
   function createSceneSubjects(scene, camera) {
     const sceneSubjects = [
       new GeneralLights(scene),
-      new GeneralControls(camera, canvas)
     ];
 
     return sceneSubjects;
@@ -84,6 +81,19 @@ export default (canvas, data) => {
 
     for(let i=0; i<sceneSubjects.length; i++)
       sceneSubjects[i].update(time);
+
+    if (animation) {
+      passTime += time;
+      if (passTime / 3.75 >= 4) {
+        passTime = 0;
+      }
+      camera.position.x = 400 * Math.sin(passTime / 3.75 * Math.PI / 2) ;
+      camera.position.z = Math.abs(400 * Math.cos(passTime / 3.75 * Math.PI / 2));
+      camera.lookAt(origin);
+    } else {
+      camera.position.set(0, 0, 400);
+      camera.lookAt(origin);
+    }
 
     renderer.render(scene, camera);
   }
@@ -100,7 +110,7 @@ export default (canvas, data) => {
     renderer.setSize(width, height);
   }
 
-  function loadModels(scene) {
+  function loadModels(data) {
     new MTLLoader()
       .setCrossOrigin('')
       .setPath(data.path)
@@ -115,15 +125,29 @@ export default (canvas, data) => {
                 material = child.material;
                 textures.origin.texture = data.path + data.img;
                 textures.origin.properties = {
-                  shininess: material.shininess,
-                  reflectivity: material.reflectivity,
-                  bumpScale: material.bumpScale,
-                  opacity: material.opacity,
-                  refractionRatio: material.refractionRatio,
+                  shininess: child.material.shininess,
+                  reflectivity: child.material.reflectivity,
+                  bumpScale: child.material.bumpScale,
+                  opacity: child.material.opacity,
+                  refractionRatio: child.material.refractionRatio,
                 };
               }
             });
-            scene.add( object );
+            new THREE.TextureLoader().load(textures.golden.texture, function(texture) {
+              material.map = texture;
+              for(let key in textures.golden.properties) {
+                material[key] = textures.golden.properties[key];
+              }
+              for (let i = scene.children.length - 1; i >= 0 ; i--) {
+                let child = scene.children[i];
+                if ( child.type === 'Group' ) {
+                  scene.remove(child);
+                }
+              }
+              scene.add( object );
+              passTime = 0;
+              animation = true;
+            });
           });
       });
   }
@@ -132,7 +156,7 @@ export default (canvas, data) => {
     let name = 'origin';
 
     switch(textureName) {
-      case 'goodwood':
+      case 'golden':
         name = textureName;
         break;
       default:
@@ -148,9 +172,17 @@ export default (canvas, data) => {
     });
   }
 
+  function stopAnimation() {
+    animation = false;
+    passTime = 0;
+    update();
+  }
+
   return {
     update,
     onWindowResize,
     updateTexture,
+    loadModels,
+    stopAnimation,
   };
 };
