@@ -28,7 +28,7 @@ export const loadFace = () => {
       const { face: initialized } = getState();
       let timeInterval = currentTime - lastTime;
       if (!initialized || timeInterval >= 10000) {
-        timeInterval = 0;
+        timeInterval = 10;
       } else {
         timeInterval = 10000 - timeInterval;
       }
@@ -47,7 +47,8 @@ export const loadFace = () => {
         type: FACE_LOAD_ERROR,
         error,
       });
-      toastr.error(error.response.data.message);
+      console.log(error);
+      // toastr.error(error.response.data.message);
     }
   };
 };
