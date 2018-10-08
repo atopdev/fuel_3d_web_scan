@@ -5,6 +5,7 @@ require('dotenv').config();
 const config = {
   env: process.env.NODE_ENV || 'development',
   host: process.env.HOST || '0.0.0.0',
+  serverHost: process.env.SERVER_HOST || '0.0.0.0',
   port: process.env.SERVER_PORT || 3001,
   jwtSecret: process.env.JWT_SECRET || 'fuel_3d_face_demo',
   jwtExpirationInterval: process.env.JWT_EXPIRATION_MINUTES || 15,
