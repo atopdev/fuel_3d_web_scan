@@ -9859,7 +9859,8 @@ html, body {
 
 .object-renderer {
   height: calc(100vh - 14px);
-  overflow: hidden; }
+  overflow: hidden;
+  z-index: 2; }
 
 .brand-gradient {
   height: 14px;
@@ -9885,7 +9886,7 @@ html, body {
   position: absolute;
   right: 0;
   top: 0;
-  z-index: -1; }
+  z-index: 1; }
 
 .btn-next {
   position: absolute;
