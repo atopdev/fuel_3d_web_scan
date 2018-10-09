@@ -28,14 +28,13 @@ app.use(cors());
 
 app.use('/api/v1', routes);
 
+app.use(config.tempDir.uri, express.static(config.tempDir.path));
+
 if (config.env === 'production') {
   app.use(express.static(path.join(__dirname, '../../build')));
-  app.use(config.tempDir.uri, express.static(path.join(__dirname, '../../build/temp')));
   app.get('*', function(req, res) {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
-} else {
-  app.use(config.tempDir.uri, express.static(config.tempDir.path));
 }
 
 app.use(error.converter);
