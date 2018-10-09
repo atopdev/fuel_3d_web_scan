@@ -29,11 +29,12 @@ export default (canvas) => {
     golden: {
       texture: goldenTexture,
       properties: {
-        shininess: 65,
+        shininess: 0.65,
         reflectivity: 0.47,
         bumpScale: 0.49,
         opacity: 1,
         refractionRatio: 1 / 1.281,
+        wireframe: true,
       },
     },
   };
@@ -70,7 +71,7 @@ export default (canvas) => {
 
   function createSceneSubjects(scene, camera) {
     const sceneSubjects = [
-      new GeneralLights(scene),
+      new GeneralLights(scene, camera),
     ];
 
     return sceneSubjects;
@@ -78,9 +79,6 @@ export default (canvas) => {
 
   function update() {
     const time = clock.getDelta();
-
-    for(let i=0; i<sceneSubjects.length; i++)
-      sceneSubjects[i].update(time);
 
     if (animation) {
       passTime += time;
@@ -94,6 +92,9 @@ export default (canvas) => {
       camera.position.set(0, 0, 400);
       camera.lookAt(origin);
     }
+
+    for(let i=0; i<sceneSubjects.length; i++)
+      sceneSubjects[i].update(time, camera);
 
     renderer.render(scene, camera);
   }
@@ -130,6 +131,7 @@ export default (canvas) => {
                   bumpScale: child.material.bumpScale,
                   opacity: child.material.opacity,
                   refractionRatio: child.material.refractionRatio,
+                  wireframe: child.material.wireframe,
                 };
               }
             });

@@ -1,4 +1,3 @@
-import { toastr } from 'react-redux-toastr';
 import {
   FACE_INITIALIZE,
   FACE_LOAD_REQUEST,
@@ -8,7 +7,7 @@ import {
   FACE_STOP_ANIMATION,
   FACE_RESET_DATA,
 } from './index';
-import { authorizedRequest } from '../../../utils/apiCaller';
+import { anonymousRequest } from '../../../utils/apiCaller';
 
 export const initialize = (element) => {
   return {
@@ -22,7 +21,7 @@ export const loadFace = () => {
     dispatch({ type: FACE_LOAD_REQUEST });
     try {
       const lastTime = Date.now();
-      const response = await authorizedRequest('get', '/faces/load');
+      const response = await anonymousRequest('get', '/faces/load');
       const { data: face } = response;
       const currentTime = Date.now();
       const { face: initialized } = getState();
@@ -48,7 +47,6 @@ export const loadFace = () => {
         error,
       });
       console.log(error);
-      // toastr.error(error.response.data.message);
     }
   };
 };
