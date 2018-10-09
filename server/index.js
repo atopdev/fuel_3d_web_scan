@@ -1,9 +1,6 @@
 const config = require('./config');
 const app = require('./config/express');
-const mongoose = require('./config/mongoose');
 const server = require('http').createServer(app);
-
-mongoose.connect();
 
 server.listen(config.port, config.host, () => {
   console.log('--');
