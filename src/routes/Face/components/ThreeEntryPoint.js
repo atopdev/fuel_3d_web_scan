@@ -1,8 +1,8 @@
 import SceneManager from './SceneManager';
 
-export default (container) => {
+export default (container, loadFace) => {
   const canvas = createCanvas(document, container);
-  const sceneManager = new SceneManager(canvas);
+  const sceneManager = new SceneManager(canvas, loadFace);
 
   bindEventListeners();
   render();
@@ -36,6 +36,5 @@ export default (container) => {
   return {
     updateTexture: sceneManager.updateTexture,
     loadModel: sceneManager.loadModels,
-    stopAnimation: sceneManager.stopAnimation,
   };
 };

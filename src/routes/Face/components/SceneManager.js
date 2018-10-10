@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { MTLLoader, OBJLoader } from 'three-obj-mtl-loader';
 import GeneralLights from './GeneralLights';
+import GeneralControls from './GeneralControls';
 
 import goldenTexture from '../../../assets/images/materials/golden.jpg';
+import wineTexture from '../../../assets/images/materials/wine.jpg';
 
-export default (canvas) => {
-
+export default (canvas, loadFace) => {
   const clock = new THREE.Clock();
   const origin = new THREE.Vector3(0, 0, 0);
 
@@ -17,17 +18,31 @@ export default (canvas) => {
   const scene = buildScene();
   const renderer = buildRender(screenDimensions);
   renderer.setClearColor(0x000000, 0);
+
   const camera = buildCamera(screenDimensions);
   scene.add(camera);
-  const sceneSubjects = createSceneSubjects(scene, camera);
-  let material;
+
+  const lightObject = new GeneralLights(scene, camera);
+  const controlObject = new GeneralControls(camera, canvas, updateTexture, loadFace);
+
   let textures = {
     origin: {
-      texture: null,
+      file: null,
       properties: {},
     },
     golden: {
-      texture: goldenTexture,
+      file: goldenTexture,
+      properties: {
+        shininess: 0.65,
+        reflectivity: 0.47,
+        bumpScale: 0.49,
+        opacity: 1,
+        refractionRatio: 1 / 1.281,
+        wireframe: true,
+      },
+    },
+    wine: {
+      file: wineTexture,
       properties: {
         shininess: 0.65,
         reflectivity: 0.47,
@@ -38,8 +53,10 @@ export default (canvas) => {
       },
     },
   };
-  let passTime = 0;
-  let animation = false;
+  loadTextures();
+
+  let material;
+  let initialized = false;
 
   function buildScene() {
     const scene = new THREE.Scene();
@@ -69,32 +86,11 @@ export default (canvas) => {
     return camera;
   }
 
-  function createSceneSubjects(scene, camera) {
-    const sceneSubjects = [
-      new GeneralLights(scene, camera),
-    ];
-
-    return sceneSubjects;
-  }
-
   function update() {
     const time = clock.getDelta();
 
-    if (animation) {
-      passTime += time;
-      if (passTime / 3.75 >= 4) {
-        passTime = 0;
-      }
-      camera.position.x = 400 * Math.sin(passTime / 3.75 * Math.PI / 2) ;
-      camera.position.z = Math.abs(400 * Math.cos(passTime / 3.75 * Math.PI / 2));
-      camera.lookAt(origin);
-    } else {
-      camera.position.set(0, 0, 400);
-      camera.lookAt(origin);
-    }
-
-    for(let i=0; i<sceneSubjects.length; i++)
-      sceneSubjects[i].update(time, camera);
+    lightObject.update(time, camera);
+    controlObject.update(time, camera);
 
     renderer.render(scene, camera);
   }
@@ -124,7 +120,7 @@ export default (canvas) => {
             object.traverse(function(child) {
               if (child instanceof THREE.Mesh) {
                 material = child.material;
-                textures.origin.texture = data.path + data.img;
+                textures.origin.file = data.path + data.img;
                 textures.origin.properties = {
                   shininess: child.material.shininess,
                   reflectivity: child.material.reflectivity,
@@ -135,11 +131,18 @@ export default (canvas) => {
                 };
               }
             });
-            new THREE.TextureLoader().load(textures.golden.texture, function(texture) {
-              material.map = texture;
-              for(let key in textures.golden.properties) {
-                material[key] = textures.golden.properties[key];
-              }
+
+            const lastTime = window.localStorage.getItem('fuel_3d_web_scan_last_time');
+            const currentTime = Date.now();
+            let timeInterval = currentTime - lastTime;
+            if (!initialized || timeInterval >= 10000) {
+              timeInterval = 0;
+            } else {
+              timeInterval = 10000 - timeInterval;
+            }
+
+            setTimeout(() => {
+              initialized = true;
               for (let i = scene.children.length - 1; i >= 0 ; i--) {
                 let child = scene.children[i];
                 if ( child.type === 'Group' ) {
@@ -147,37 +150,42 @@ export default (canvas) => {
                 }
               }
               scene.add( object );
-              passTime = 0;
-              animation = true;
-            });
+              updateTexture('golden');
+            }, timeInterval);
           });
       });
   }
 
-  function updateTexture(textureName) {
-    let name = 'origin';
-
-    switch(textureName) {
-      case 'golden':
-        name = textureName;
-        break;
-      default:
-        name = 'origin';
+  function updateTexture(name) {
+    if (!material) return;
+    material.map = textures[name].texture;
+    for(let key in textures[name].properties) {
+      material[key] = textures[name].properties[key];
     }
-
-    new THREE.TextureLoader().load(textures[name].texture, function(texture) {
-      material.map = texture;
-      for(let key in textures[name].properties) {
-        material[key] = textures[name].properties[key];
-      }
-      update();
-    });
+    if (name === 'golden') {
+      controlObject.reset();
+    }
+    controlObject.toggleRotation(true);
+    update();
   }
 
-  function stopAnimation() {
-    animation = false;
-    passTime = 0;
-    update();
+  async function loadTextures() {
+    let promises = [];
+    for(let name in textures) {
+      promises.push(new Promise((resolve, reject) => {
+        if (name === 'origin') {
+          resolve({ key: name, value: null });
+        } else {
+          new THREE.TextureLoader().load(textures[name].file, (texture) => {
+            resolve({ key: name, value: texture });
+          });
+        }
+      }));
+    }
+    const result = await Promise.all(promises);
+    for(let texture of result) {
+      textures[texture.key].texture = texture.value;
+    }
   }
 
   return {
@@ -185,6 +193,5 @@ export default (canvas) => {
     onWindowResize,
     updateTexture,
     loadModels,
-    stopAnimation,
   };
 };
