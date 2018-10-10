@@ -39,11 +39,11 @@ exports.load = async (req, res, next) => {
       fs.mkdirSync(dirPath);
       const jszip = new JSZip();
       const zipContent = await jszip.loadAsync(faceZipFile.Body);
-      Object.keys(zipContent.files).forEach(async (filename) => {
+      for(let filename of Object.keys(zipContent.files)) {
         const fileContent = await jszip.file(filename).async('nodebuffer');
         const destFile = `${dirPath}/${filename}`;
         fs.writeFileSync(destFile, fileContent);
-      });
+      }
     }
     return res.json({
       path: `http://${config.serverHost}${config.port === 80 ? '' : ':' + config.port}${config.tempDir.uri}/${dirName}/`,

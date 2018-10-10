@@ -14,7 +14,7 @@ const config = {
     bucket: process.env.S3_BUCKET_NAME,
   },
   tempDir: {
-    path: path.join(__dirname, '../../public/temp'),
+    path: path.join(__dirname, '../../tmp'),
     uri: '/temp',
   },
 };

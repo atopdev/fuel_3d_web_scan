@@ -111,7 +111,7 @@ export default (canvas, loadFace) => {
     new MTLLoader()
       .setCrossOrigin('')
       .setPath(data.path)
-      .load(data.mtl, function ( materials ) {
+      .load('../head_mesh.mtl', function ( materials ) {
         materials.preload();
         new OBJLoader()
           .setMaterials(materials)
