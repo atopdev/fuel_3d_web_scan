@@ -22,4 +22,6 @@ yarn-error.log*
 
 .env
 
-/public/temp
+/tmp/*
+
+!/tmp/head_mesh.mtl
